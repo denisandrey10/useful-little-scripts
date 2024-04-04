@@ -1,0 +1,32 @@
+#!/bin/bash
+
+if [ "$1" == "scan" ]; then
+    nmcli dev wifi list
+elif [ "$1" == "connect" ]; then
+    if [ "$2" == "personal" ]; then
+        sudo nmcli dev wifi connect "$3" password "$4"
+    elif [ "$2" == "enterprise" ]; then
+        sudo nmcli con add type wifi ifname "*" con-name "$3" autoconnect yes ssid "$3"
+        sudo nmcli con edit "$3" >/dev/null 2>&1 <<EOF
+set wifi-sec.key-mgmt wpa-eap
+set wifi-sec.proto rsn
+set 802-1x.eap peap
+set 802-1x.identity $4
+set 802-1x.phase2-auth mschapv2
+set 802-1x.password $5
+save
+quit
+EOF
+    else
+        echo "Invalid connect option. Use 'personal' or 'enterprise'."
+    fi
+elif [ "$1" == "help" ]; then
+    echo "Usage: dnet command [arguments]"
+    echo "Possible commands: scan, connect"
+    echo "scan has no arguments, example: dnet scan"
+    echo "connect has two options: personal and enterprise"
+    echo "connect personal has two arguments: SSID and password, example: dnet connect personal your_wifi_name your_wifi_password"
+    echo "connect enterprise has three arguments: SSID, Username and password, example: dnet connect enterprise work_wifi your_username your_password"
+else
+    echo "Invalid command. Use 'scan', 'connect', or 'help'."
+fi
